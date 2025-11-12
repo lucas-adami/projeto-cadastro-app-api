@@ -1,0 +1,944 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Cadastro App API",
+    "version": "1.0.0",
+    "description": "API RESTful para gerenciamento de cursos, professores, mat\u00e9rias e usu\u00e1rios. Documenta\u00e7\u00e3o completa de todas as rotas."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Servidor de Desenvolvimento Local"
+    },
+    {
+      "url": "http://184.73.149.105:3000",
+      "description": "Servidor EC2 na AWS"
+    },
+    {
+      "url": "https://api.exemplo.com",
+      "description": "Servidor de Produ\u00e7\u00e3o (em breve, edite esta URL conforme necess\u00e1rio)"
+    }
+  ],
+  "paths": {
+    "/professores": {
+      "get": {
+        "summary": "Lista todos os professores",
+        "responses": {
+          "200": {
+            "description": "Lista de professores retornada com sucesso"
+          }
+        },
+        "tags": [
+          "Professores"
+        ]
+      },
+      "post": {
+        "summary": "Cria um novo professor",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Professor"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Professor criado com sucesso"
+          }
+        },
+        "tags": [
+          "Professores"
+        ]
+      }
+    },
+    "/professores/{id}": {
+      "get": {
+        "summary": "Busca um professor por ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Professor encontrado"
+          },
+          "404": {
+            "description": "N\u00e3o encontrado"
+          }
+        },
+        "tags": [
+          "Professores"
+        ]
+      },
+      "put": {
+        "summary": "Atualiza um professor",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Professor"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Professor atualizado"
+          }
+        },
+        "tags": [
+          "Professores"
+        ]
+      },
+      "delete": {
+        "summary": "Remove um professor",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Professor removido"
+          }
+        },
+        "tags": [
+          "Professores"
+        ]
+      }
+    },
+    "/professores/{id}/transferir-coordenacao": {
+      "put": {
+        "summary": "Transfere a coordenação dos cursos de um professor para outro",
+        "tags": ["Professores"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "ID do professor coordenador atual"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "novoCoordenadorId": {
+                    "type": "integer",
+                    "description": "ID do novo coordenador"
+                  }
+                },
+                "required": ["novoCoordenadorId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Coordenação transferida com sucesso"
+          },
+          "404": {
+            "description": "Professor não encontrado ou não é coordenador de nenhum curso"
+          },
+          "400": {
+            "description": "Erro ao transferir coordenação"
+          }
+        }
+      }
+    },
+    "/professores/{id}/tem-curso-coordenado": {
+      "get": {
+        "summary": "Verifica se o professor é coordenador de algum curso",
+        "tags": ["Professores"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "ID do professor"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Retorna se o professor é coordenador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "isCoordenador": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erro ao verificar coordenação"
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Realiza login e gera um token JWT",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "senha": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "email",
+                  "senha"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token JWT retornado"
+          },
+          "401": {
+            "description": "Credenciais inv\u00e1lidas"
+          }
+        },
+        "tags": [
+          "Autentica\u00e7\u00e3o"
+        ]
+      }
+    },
+    "/cursos": {
+      "get": {
+        "summary": "Lista todos os cursos",
+        "responses": {
+          "200": {
+            "description": "Lista de cursos retornada com sucesso"
+          }
+        },
+        "tags": [
+          "Cursos"
+        ]
+      },
+      "post": {
+        "summary": "Cria um novo curso",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Curso"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Curso criado com sucesso"
+          }
+        },
+        "tags": [
+          "Cursos"
+        ]
+      }
+    },
+    "/cursos/{id}": {
+      "get": {
+        "summary": "Busca um curso por ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Curso encontrado"
+          },
+          "404": {
+            "description": "N\u00e3o encontrado"
+          }
+        },
+        "tags": [
+          "Cursos"
+        ]
+      },
+      "put": {
+        "summary": "Atualiza um curso",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Curso"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Curso atualizado"
+          }
+        },
+        "tags": [
+          "Cursos"
+        ]
+      },
+      "delete": {
+        "summary": "Remove um curso",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Curso removido"
+          }
+        },
+        "tags": [
+          "Cursos"
+        ]
+      }
+    },
+    "/cursos/{id}/tem-materias-exclusivas": {
+      "get": {
+        "summary": "Verifica se o curso possui matérias exclusivas (matérias que só existem nesse curso)",
+        "tags": ["Cursos"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "ID do curso"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Retorna se o curso possui matérias exclusivas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "temExclusivas": { "type": "boolean" },
+                    "quantidade": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erro ao verificar matérias exclusivas"
+          }
+        }
+      }
+    },
+    "/materias": {
+      "get": {
+        "summary": "Lista todas as mat\u00e9rias",
+        "responses": {
+          "200": {
+            "description": "Lista de mat\u00e9rias retornada com sucesso"
+          }
+        },
+        "tags": [
+          "Mat\u00e9rias"
+        ]
+      },
+      "post": {
+        "summary": "Cria uma nova mat\u00e9ria",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Materia"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Mat\u00e9ria criada com sucesso"
+          }
+        },
+        "tags": [
+          "Mat\u00e9rias"
+        ]
+      }
+    },
+    "/materias/{id}": {
+      "get": {
+        "summary": "Busca uma mat\u00e9ria por ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mat\u00e9ria encontrada"
+          },
+          "404": {
+            "description": "N\u00e3o encontrada"
+          }
+        },
+        "tags": [
+          "Mat\u00e9rias"
+        ]
+      },
+      "put": {
+        "summary": "Atualiza uma mat\u00e9ria",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Materia"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Mat\u00e9ria atualizada"
+          }
+        },
+        "tags": [
+          "Mat\u00e9rias"
+        ]
+      },
+      "delete": {
+        "summary": "Remove uma mat\u00e9ria",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Mat\u00e9ria removida"
+          }
+        },
+        "tags": [
+          "Mat\u00e9rias"
+        ]
+      }
+    },
+    "/usuarios": {
+      "get": {
+        "summary": "Lista todos os usu\u00e1rios",
+        "responses": {
+          "200": {
+            "description": "Lista de usu\u00e1rios retornada com sucesso"
+          }
+        },
+        "tags": [
+          "Usu\u00e1rios"
+        ]
+      },
+      "post": {
+        "summary": "Cria um novo usu\u00e1rio",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Usuario"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Usu\u00e1rio criado com sucesso"
+          }
+        },
+        "tags": [
+          "Usu\u00e1rios"
+        ]
+      }
+    },
+    "/usuarios/{id}": {
+      "get": {
+        "summary": "Busca um usu\u00e1rio por ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Usu\u00e1rio encontrado"
+          },
+          "404": {
+            "description": "N\u00e3o encontrado"
+          }
+        },
+        "tags": [
+          "Usu\u00e1rios"
+        ]
+      },
+      "put": {
+        "summary": "Atualiza um usu\u00e1rio",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Usuario"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Usu\u00e1rio atualizado"
+          }
+        },
+        "tags": [
+          "Usu\u00e1rios"
+        ]
+      },
+      "delete": {
+        "summary": "Remove um usu\u00e1rio",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Usu\u00e1rio removido"
+          }
+        },
+        "tags": [
+          "Usu\u00e1rios"
+        ]
+      }
+    },
+    "/enum/titulacao": {
+    "get": {
+      "summary": "Obtém as titulações disponíveis",
+      "responses": {
+        "200": { "description": "Titulações encontradas com sucesso" },
+        "400": { "description": "Erro ao buscar titulações" }
+      },
+      "security": [ { "bearerAuth": [] } ],
+      "tags": [ "Enums" ]
+    }
+    },
+    "/enum/statusAtividade": {
+    "get": {
+      "summary": "Obtém os status de atividade disponíveis",
+      "responses": {
+        "200": { "description": "Status de Atividades encontrados com sucesso" },
+        "400": { "description": "Erro ao buscar Status de Atividades" }
+      },
+      "security": [ { "bearerAuth": [] } ],
+      "tags": [ "Enums" ]
+    }
+    },
+    "/enum/modeloCurso": {
+      "get": {
+        "summary": "Obtém os modelos de curso disponíveis",
+        "responses": {
+          "200": { "description": "Modelos de Curso encontrados com sucesso" },
+          "400": { "description": "Erro ao buscar Modelos de Curso" }
+        },
+        "security": [ { "bearerAuth": [] } ],
+        "tags": [ "Enums" ]
+      }
+    },
+    "/enum/referencia": {
+      "get": {
+        "summary": "Obtém as referências disponíveis",
+        "responses": {
+          "200": { "description": "Referências encontradas com sucesso" },
+          "400": { "description": "Erro ao buscar Referências" }
+        },
+        "security": [ { "bearerAuth": [] } ],
+        "tags": [ "Enums" ]
+      }
+    },
+    "/enum/turno": {
+      "get": {
+        "summary": "Obtém os turnos disponíveis",
+        "responses": {
+          "200": { "description": "Turnos encontrados com sucesso" },
+          "400": { "description": "Erro ao buscar Turnos" }
+        },
+        "security": [ { "bearerAuth": [] } ],
+        "tags": [ "Enums" ]
+      }
+    },
+    "/enum/tipoMateria": {
+      "get": {
+        "summary": "Obtém os tipos de matéria disponíveis",
+        "responses": {
+          "200": { "description": "Tipos de Matéria encontrados com sucesso" },
+          "400": { "description": "Erro ao buscar Tipos de Matéria" }
+        },
+        "security": [ { "bearerAuth": [] } ],
+        "tags": [ "Enums" ]
+      }
+    },
+    "/professores/upload/planilha-modelo.xlsx": {
+      "post": {
+        "summary": "Faz upload de uma planilha de professores",
+        "tags": ["Professores"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Professores cadastrados com sucesso" },
+          "400": { "description": "Erro no upload" }
+        }
+      }
+    },
+    "/professores/download/planilha-modelo.xlsx": {
+      "get": {
+        "summary": "Faz download do modelo de planilha de professores",
+        "tags": ["Professores"],
+        "responses": {
+          "200": { "description": "Arquivo XLSX retornado" }
+        }
+      }
+    },
+    "/auth/esqueceu-senha": {
+      "post": {
+        "summary": "Solicita recuperação de senha (envia código por e-mail)",
+        "tags": ["Autenticação"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string" }
+                },
+                "required": ["email"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Token de recuperação enviado" },
+          "400": { "description": "Erro ao solicitar recuperação" }
+        }
+      }
+    },
+    "/auth/verifica-reset-code": {
+      "post": {
+        "summary": "Verifica o código de recuperação de senha",
+        "tags": ["Autenticação"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": { "type": "string" }
+                },
+                "required": ["code"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Código verificado com sucesso" },
+          "400": { "description": "Código inválido ou expirado" }
+        }
+      }
+    },
+    "/unidades": {
+      "post": {
+        "summary": "Busca unidade mais próxima a partir de latitude e longitude",
+        "tags": ["Unidades"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "latitude": { "type": "number" },
+                  "longitude": { "type": "number" }
+                },
+                "required": ["latitude", "longitude"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Unidade mais próxima retornada" },
+          "400": { "description": "Latitude e longitude obrigatórios" }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Professor": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "titulacao": {
+            "type": "string",
+            "enum": [
+              "DOUTOR",
+              "MESTRE",
+              "ESPECIALISTA"
+            ]
+          },
+          "idUnidade": {
+            "type": "string"
+          },
+          "referencia": {
+            "type": "string"
+          },
+          "lattes": {
+            "type": "string"
+          },
+          "statusAtividade": {
+            "type": "string",
+            "enum": [
+              "ATIVO",
+              "AFASTADO",
+              "LICENCA",
+              "NAO_ATIVO"
+            ]
+          },
+          "observacoes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "nome",
+          "email",
+          "titulacao",
+          "idUnidade",
+          "referencia",
+          "lattes",
+          "statusAtividade"
+        ]
+      },
+      "Curso": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string"
+          },
+          "codigo": {
+            "type": "string"
+          },
+          "sigla": {
+            "type": "string"
+          },
+          "modelo": {
+            "type": "string",
+            "enum": [
+              "PRESENCIAL",
+              "HIBRIDO",
+              "EAD"
+            ]
+          },
+          "coordenadorId": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "nome",
+          "codigo",
+          "sigla",
+          "modelo",
+          "coordenadorId"
+        ]
+      },
+      "Materia": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string"
+          },
+          "cargaHoraria": {
+            "type": "integer"
+          },
+          "professorId": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "nome",
+          "cargaHoraria",
+          "professorId"
+        ]
+      },
+      "Usuario": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "senha": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "nome",
+          "email",
+          "senha"
+        ]
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Professores",
+      "description": "Opera\u00e7\u00f5es relacionadas aos professores"
+    },
+    {
+      "name": "Cursos",
+      "description": "Opera\u00e7\u00f5es relacionadas aos cursos"
+    },
+    {
+      "name": "Mat\u00e9rias",
+      "description": "Opera\u00e7\u00f5es relacionadas \u00e0s mat\u00e9rias"
+    },
+    {
+      "name": "Usu\u00e1rios",
+      "description": "Opera\u00e7\u00f5es relacionadas aos usu\u00e1rios"
+    },
+    {
+      "name": "Autentica\u00e7\u00e3o",
+      "description": "Opera\u00e7\u00f5es de autentica\u00e7\u00e3o e login"
+    },
+    {
+      "name": "Enums",
+      "description": "Operações relacionadas aos valores enumerados usados na aplicação"
+    }
+  ]
+}
