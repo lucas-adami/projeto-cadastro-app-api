@@ -9,6 +9,7 @@ import prisma from "../../prisma/client";
 import { comparePassword, hashPassword } from "../../utils/hash";
 import { generateToken } from "../../utils/jwt";
 import { generateResetCode, sendResetCode } from "../../utils/reset-code";
+import { ResetCodePayload, ResetPasswordDto, ChangePasswordDto } from "../../types/auth.dto";
 
 // Mocks
 jest.mock("../../prisma/client", () => ({
@@ -109,7 +110,12 @@ describe("Auth Service", () => {
 
   // ✅ comparaCodigo
   describe("comparaCodigo", () => {
-    const payload = { exp: Math.floor(Date.now() / 1000) + 60, code: "123456" };
+    const payload: ResetCodePayload = {
+      userId: "user-id",
+      code: "123456",
+      exp: Math.floor(Date.now() / 1000) + 60,
+      iat: Math.floor(Date.now() / 1000),
+    };
 
     it("should throw if code expired", async () => {
       const expiredPayload = { ...payload, exp: Math.floor(Date.now() / 1000) - 60 };
@@ -127,17 +133,22 @@ describe("Auth Service", () => {
 
   // ✅ resetarSenha
   describe("resetarSenha", () => {
-    const payload = { exp: Math.floor(Date.now() / 1000) + 60, userId: "user-id" };
+    const payload: ResetCodePayload = {
+      userId: "user-id",
+      code: "123456",
+      exp: Math.floor(Date.now() / 1000) + 60,
+      iat: Math.floor(Date.now() / 1000),
+    };
     const mockUser = { id: "user-id", senha: "old-hash" };
 
     it("should throw if token expired", async () => {
       const expiredPayload = { ...payload, exp: Math.floor(Date.now() / 1000) - 60 };
-      await expect(resetarSenha({ novaSenha: "newPass" }, expiredPayload)).rejects.toThrow("Código expirado");
+      await expect(resetarSenha({ novaSenha: "newPass", confirmarSenha: "newPass" }, expiredPayload)).rejects.toThrow("Código expirado");
     });
 
     it("should throw if user not found", async () => {
       mockPrisma.usuario.findUnique.mockResolvedValue(null);
-      await expect(resetarSenha({ novaSenha: "newPass" }, payload)).rejects.toThrow("Usuário não encontrado");
+      await expect(resetarSenha({ novaSenha: "newPass", confirmarSenha: "newPass" }, payload)).rejects.toThrow("Usuário não encontrado");
     });
 
     it("should reset password successfully", async () => {
@@ -145,7 +156,7 @@ describe("Auth Service", () => {
       mockHashPassword.mockResolvedValue("new-hash");
       mockPrisma.usuario.update.mockResolvedValue({ ...mockUser, senha: "new-hash" });
 
-      const result = await resetarSenha({ novaSenha: "newPass" }, payload);
+      const result = await resetarSenha({ novaSenha: "newPass", confirmarSenha: "newPass" }, payload);
       expect(result.mensagem).toBe("Senha resetada com sucesso");
       expect(mockPrisma.usuario.update).toHaveBeenCalled();
     });
@@ -157,13 +168,13 @@ describe("Auth Service", () => {
 
     it("should throw if user not found", async () => {
       mockPrisma.usuario.findUnique.mockResolvedValue(null);
-      await expect(alterarSenha("user-id", { senhaAtual: "old", novaSenha: "new" })).rejects.toThrow("Usuário não encontrado");
+      await expect(alterarSenha("user-id", { senhaAtual: "old", novaSenha: "new", confirmarSenha: "new" })).rejects.toThrow("Usuário não encontrado");
     });
 
     it("should throw if current password incorrect", async () => {
       mockPrisma.usuario.findUnique.mockResolvedValue(mockUser);
       mockComparePassword.mockResolvedValue(false);
-      await expect(alterarSenha("user-id", { senhaAtual: "wrong", novaSenha: "new" })).rejects.toThrow("Senha atual incorreta");
+      await expect(alterarSenha("user-id", { senhaAtual: "wrong", novaSenha: "new", confirmarSenha: "new" })).rejects.toThrow("Senha atual incorreta");
     });
 
     it("should change password successfully", async () => {
@@ -172,7 +183,7 @@ describe("Auth Service", () => {
       mockHashPassword.mockResolvedValue("new-hash");
       mockPrisma.usuario.update.mockResolvedValue({ ...mockUser, senha: "new-hash" });
 
-      const result = await alterarSenha("user-id", { senhaAtual: "old", novaSenha: "new" });
+      const result = await alterarSenha("user-id", { senhaAtual: "old", novaSenha: "new", confirmarSenha: "new" });
       expect(result.mensagem).toBe("Senha alterada com sucesso");
       expect(mockPrisma.usuario.update).toHaveBeenCalled();
     });
